@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ArogyaCare - Enterprise Hospital Management Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-hover: #0369a1;
+      --primary-light: #e0f2fe;
+      --secondary: #0ea5e9;
+      --surface: #ffffff;
+      --bg: #f8fafc;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --success: #16a34a;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --radius: 12px;
+      --shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { background-color: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+    
+    /* Top Bar */
+    .top-nav {
+      background: #ffffff;
+      border-bottom: 1px solid var(--border);
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; cursor: pointer; text-decoration: none; }
+    .brand-icon { width: 40px; height: 40px; background: var(--primary-light); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 24px; font-weight: 800; }
+    .brand-text { font-size: 20px; font-weight: 800; color: #0369a1; letter-spacing: -0.5px; }
+
+    .nav-actions { display: flex; align-items: center; gap: 14px; }
+    .btn { padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-primary { background: var(--primary); color: #ffffff; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-outline { background: #ffffff; border: 1px solid var(--border); color: var(--text); }
+    .btn-outline:hover { background: #f1f5f9; }
+    .btn-danger { background: #fee2e2; color: var(--danger); border: 1px solid #fecaca; }
+    .btn-danger:hover { background: #fecaca; }
+
+    /* Screen Views */
+    .view-container { display: none; flex: 1; }
+    .view-container.active { display: flex; flex-direction: column; }
+
+    /* Landing Page */
+    .hero { text-align: center; padding: 70px 20px 40px; max-width: 900px; margin: 0 auto; }
+    .hero-badge { display: inline-block; padding: 6px 16px; border-radius: 20px; background: var(--primary-light); color: var(--primary); font-weight: 700; font-size: 12px; text-transform: uppercase; margin-bottom: 20px; }
+    .hero h1 { font-size: 48px; font-weight: 800; line-height: 1.15; color: #0f172a; margin-bottom: 18px; }
+    .hero p { font-size: 17px; color: var(--text-muted); line-height: 1.6; margin-bottom: 32px; }
+    
+    .symptom-search-box {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      padding: 12px;
+      border-radius: 14px;
+      box-shadow: 0 10px 25px rgba(2, 132, 199, 0.08);
+      max-width: 720px;
+      margin: 0 auto 50px;
+      display: flex;
+      gap: 10px;
+    }
+    .symptom-search-box input { flex: 1; border: none; outline: none; font-size: 15px; padding: 8px 14px; }
+
+    /* Role Selection Auth Modal / View */
+    .auth-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; max-width: 980px; margin: 60px auto; padding: 0 20px; }
+    .role-card { background: #ffffff; border: 2px solid var(--border); border-radius: 16px; padding: 32px 24px; text-align: center; cursor: pointer; transition: all 0.2s ease; }
+    .role-card:hover, .role-card.selected { border-color: var(--primary); transform: translateY(-4px); box-shadow: 0 12px 20px rgba(2, 132, 199, 0.08); }
+    .role-card .role-emoji { font-size: 44px; margin-bottom: 16px; }
+    .role-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .role-card p { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+
+    /* Portal Layout */
+    .portal-layout { display: flex; flex: 1; }
+    .portal-sidebar { width: 250px; background: #ffffff; border-right: 1px solid var(--border); padding: 24px 16px; display: flex; flex-direction: column; gap: 8px; }
+    .portal-nav-item { padding: 12px 14px; border-radius: 8px; font-size: 14px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.2s; }
+    .portal-nav-item:hover, .portal-nav-item.active { background: var(--primary-light); color: var(--primary); }
+    .portal-content { flex: 1; padding: 32px 40px; overflow-y: auto; }
+
+    /* Cards & Grids */
+    .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 28px; }
+    .metric-card { background: #ffffff; border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+    .metric-card span { font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); }
+    .metric-card h3 { font-size: 28px; font-weight: 800; color: #0369a1; margin-top: 6px; }
+
+    .card { background: #ffffff; border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 24px; box-shadow: var(--shadow); }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+    .card-header h2 { font-size: 18px; font-weight: 700; color: #1e293b; }
+
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+    th { background: #f8fafc; color: var(--text-muted); font-weight: 600; padding: 12px; border-bottom: 1px solid var(--border); text-transform: uppercase; font-size: 11px; }
+    td { padding: 14px 12px; border-bottom: 1px solid #f1f5f9; }
+
+    /* Status Pills */
+    .pill { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+    .pill-confirmed, .pill-scheduled { background: #e0f2fe; color: #0369a1; }
+    .pill-completed { background: #dcfce7; color: #15803d; }
+    .pill-cancelled { background: #fee2e2; color: #b91c1c; }
+
+    /* Form Fields */
+    .form-group { margin-bottom: 14px; }
+    label { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+    input, select, textarea { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: #ffffff; outline: none; }
+    input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12); }
+
+    /* Slot Picker Grid */
+    .slot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-top: 10px; }
+    .slot-btn { padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: #ffffff; font-size: 12px; font-weight: 700; cursor: pointer; text-align: center; }
+    .slot-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .slot-btn.selected { background: var(--primary); color: #ffffff; border-color: var(--primary); }
+    .slot-btn.booked { background: #f1f5f9; color: #94a3b8; cursor: not-allowed; border-color: #e2e8f0; text-decoration: line-through; }
+
+    /* Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); display: none; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(2px); }
+    .modal-overlay.open { display: flex; }
+    .modal { background: #ffffff; border-radius: 16px; padding: 28px; width: 90%; max-width: 540px; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 25px rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <nav class="top-nav">
+    <div class="brand" onclick="showLandingView()">
+      <div class="brand-icon">+</div>
+      <div class="brand-text">ArogyaCare</div>
+    </div>
+    <div class="nav-actions" id="topNavActions">
+      <button class="btn btn-primary" onclick="showAuthSelection()">Login to HMS</button>
+    </div>
+  </nav>
+
+  <!-- VIEW 1: LANDING PAGE -->
+  <div id="landingView" class="view-container active">
+    <div class="hero">
+      <div class="hero-badge">Smart Clinical Platform</div>
+      <h1>Your Health. Our Priority.</h1>
+      <p>Find trusted doctors, book appointments, receive digital prescriptions, and access your health records on one secure, unified hospital system.</p>
+
+      <div class="symptom-search-box">
+        <input type="text" id="symptomInput" placeholder="Describe symptoms (e.g. 'fever and headache' or 'skin rash')..." />
+        <button class="btn btn-primary" onclick="searchBySymptom()">Find Doctor</button>
+      </div>
+      <p id="symptomDisclaimer" style="font-size: 12px; color: var(--text-muted); margin-top: -30px; margin-bottom: 40px; display: none;">
+        * Doctor suggestions are based on clinical symptom mapping and are not a substitute for professional diagnosis.
+      </p>
+    </div>
+
+    <!-- Suggested Doctors Section -->
+    <div style="max-width: 1100px; margin: 0 auto; padding: 0 20px; width: 100%;" id="doctorDirectorySection">
+      <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 16px;" id="doctorListHeading">Available Specialists</h2>
+      <div id="doctorCardsGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-bottom: 60px;">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW 2: AUTH SELECTION & LOGIN -->
+  <div id="authView" class="view-container">
+    <div style="text-align: center; margin-top: 40px;">
+      <h2 style="font-size: 28px; font-weight: 800;">Select Your Access Portal</h2>
+      <p style="color: var(--text-muted); margin-top: 6px;">Choose your authorized role to enter the hospital platform</p>
+    </div>
+
+    <div class="auth-grid">
+      <div class="role-card" onclick="selectRole('DOCTOR', this)">
+        <div class="role-emoji">👨‍⚕️</div>
+        <h3>Doctor Portal</h3>
+        <p>Access your consultations, patient records, issue prescriptions, and manage schedules.</p>
+      </div>
+      <div class="role-card selected" onclick="selectRole('PATIENT', this)">
+        <div class="role-emoji">👤</div>
+        <h3>Patient Portal</h3>
+        <p>Find doctors, schedule visits, download SOAP medical reports, and order medicines.</p>
+      </div>
+      <div class="role-card" onclick="selectRole('ADMIN', this)">
+        <div class="role-emoji">🛡️</div>
+        <h3>Administrator</h3>
+        <p>Oversee hospital clinics, manage specialist rosters, review analytics, and inventory.</p>
+      </div>
+    </div>
+
+    <!-- Login Box -->
+    <div class="card" style="max-width: 440px; margin: 0 auto 60px; width: 90%;">
+      <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px;" id="loginTitle">Patient Login</h3>
+      <form id="portalLoginForm">
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="loginEmail" required value="john.doe@hospital.com" />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="loginPassword" required value="demo123" />
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; margin-top: 10px;">Enter Dashboard</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- VIEW 3: PATIENT PORTAL -->
+  <div id="patientPortalView" class="view-container">
+    <div class="portal-layout">
+      <div class="portal-sidebar">
+        <div class="portal-nav-item active" onclick="switchPatientTab('overview', this)">My Dashboard</div>
+        <div class="portal-nav-item" onclick="switchPatientTab('booking', this)">Book Appointment</div>
+        <div class="portal-nav-item" onclick="switchPatientTab('prescriptions', this)">My Prescriptions</div>
+        <div class="portal-nav-item" onclick="switchPatientTab('soap', this)">SOAP Visit Reports</div>
+        <div class="portal-nav-item" onclick="switchPatientTab('pharmacy', this)">Order Medicines</div>
+      </div>
+      <div class="portal-content">
+        <!-- Overview Tab -->
+        <div id="ptTabOverview">
+          <h2 style="font-size: 24px; font-weight: 800; margin-bottom: 4px;" id="patientWelcomeHeading">Good morning, John</h2>
+          <p style="color: var(--text-muted); margin-bottom: 24px;">Your medical appointments and treatment timeline</p>
+
+          <div class="grid-4">
+            <div class="metric-card"><span>Total Consultations</span><h3 id="ptStatTotal">0</h3></div>
+            <div class="metric-card"><span>Active Bookings</span><h3 id="ptStatActive">0</h3></div>
+            <div class="metric-card"><span>Issued Prescriptions</span><h3 id="ptStatRx">0</h3></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h2>My Appointments</h2>
+              <button class="btn btn-primary" onclick="switchPatientTab('booking')">+ New Booking</button>
+            </div>
+            <table>
+              <thead>
+                <tr><th>ID</th><th>Physician</th><th>Date & Time</th><th>Reason</th><th>Status</th><th>Action</th></tr>
+              </thead>
+              <tbody id="patientAppointmentsBody">
+                <tr><td colspan="6" style="text-align: center;">No appointments found.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Booking Tab -->
+        <div id="ptTabBooking" style="display: none;">
+          <div class="card" style="max-width: 650px;">
+            <div class="card-header"><h2>Multi-Step Clinical Booking</h2></div>
+            <form id="appointmentBookingForm">
+              <div class="form-group">
+                <label>Select Specialist</label>
+                <select id="bookDoctorSelect" required onchange="generateDoctorSlots()"></select>
+              </div>
+              <div class="form-group">
+                <label>Select Date</label>
+                <input type="date" id="bookDate" required onchange="generateDoctorSlots()" />
+              </div>
+              <div class="form-group">
+                <label>Available Slots (Live Slot Conflict Check)</label>
+                <div class="slot-grid" id="slotPickerGrid">
+                  <span style="font-size: 13px; color: var(--text-muted);">Select doctor & date to populate available slots.</span>
+                </div>
+                <input type="hidden" id="selectedTimeSlot" required />
+              </div>
+              <div class="form-group">
+                <label>Current Symptoms / Visit Purpose</label>
+                <textarea id="bookReason" rows="3" required placeholder="Describe what you are experiencing..."></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">Confirm Appointment</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Prescriptions Tab -->
+        <div id="ptTabPrescriptions" style="display: none;">
+          <div class="card">
+            <div class="card-header"><h2>My Digital Prescriptions</h2></div>
+            <div id="patientPrescriptionsList">Loading prescriptions...</div>
+          </div>
+        </div>
+
+        <!-- SOAP XML Tab -->
+        <div id="ptTabSoap" style="display: none;">
+          <div class="card">
+            <div class="card-header"><h2>Contract-First Patient Report (/ws/patientReport.wsdl)</h2></div>
+            <button class="btn btn-outline" style="margin-bottom: 14px;" onclick="loadCurrentPatientSoapReport()">Fetch SOAP Record</button>
+            <pre id="ptSoapXmlBox" style="background: #f8fafc; border: 1px solid var(--border); padding: 14px; border-radius: 8px; font-size: 12px; color: #0369a1; max-height: 350px; overflow-y: auto;">Click fetch to retrieve XML from Spring-WS.</pre>
+          </div>
+        </div>
+
+        <!-- Pharmacy Tab -->
+        <div id="ptTabPharmacy" style="display: none;">
+          <div class="card">
+            <div class="card-header"><h2>Hospital Pharmacy & Prescribed Medicines</h2></div>
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+              <div>
+                <h3 style="font-size: 15px; margin-bottom: 12px;">Available Prescription Medicines</h3>
+                <div id="pharmacyCatalogGrid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;"></div>
+              </div>
+              <div style="background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid var(--border);">
+                <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 12px;">Your Order</h3>
+                <div id="cartItemsList" style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">Cart is empty.</div>
+                <div style="font-size: 16px; font-weight: 800; margin-bottom: 16px;">Total: ₹<span id="cartTotal">0</span></div>
+                <input type="text" id="orderAddress" placeholder="Delivery Address..." style="margin-bottom: 12px;" />
+                <button class="btn btn-primary" style="width: 100%;" onclick="placeMedicineOrder()">Place Medicine Order</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW 4: DOCTOR PORTAL -->
+  <div id="doctorPortalView" class="view-container">
+    <div class="portal-layout">
+      <div class="portal-sidebar">
+        <div class="portal-nav-item active">Consultation Queue</div>
+      </div>
+      <div class="portal-content">
+        <h2 style="font-size: 24px; font-weight: 800; margin-bottom: 4px;" id="doctorWelcomeHeading">Good morning, Doctor</h2>
+        <p style="color: var(--text-muted); margin-bottom: 24px;">Scheduled patient appointments and clinical consults</p>
+
+        <div class="card">
+          <div class="card-header"><h2>Upcoming Consultations</h2></div>
+          <table>
+            <thead>
+              <tr><th>Appt ID</th><th>Patient</th><th>Date & Time</th><th>Symptoms</th><th>Status</th><th>Clinical Actions</th></tr>
+            </thead>
+            <tbody id="doctorQueueTable">
+              <tr><td colspan="6" style="text-align: center;">Loading consultations...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW 5: ADMIN PORTAL -->
+  <div id="adminPortalView" class="view-container">
+    <div class="portal-layout">
+      <div class="portal-sidebar">
+        <div class="portal-nav-item active" onclick="switchAdminTab('metrics', this)">Analytics & Metrics</div>
+        <div class="portal-nav-item" onclick="switchAdminTab('hospitals', this)">Hospital Clinics</div>
+        <div class="portal-nav-item" onclick="switchAdminTab('doctors', this)">Specialist Roster</div>
+      </div>
+      <div class="portal-content">
+        <div id="admTabMetrics">
+          <h2 style="font-size: 24px; font-weight: 800; margin-bottom: 20px;">Hospital Operational Control</h2>
+          <div class="grid-4">
+            <div class="metric-card"><span>Total Hospitals</span><h3 id="admStatHospitals">0</h3></div>
+            <div class="metric-card"><span>Active Specialists</span><h3 id="admStatDoctors">0</h3></div>
+            <div class="metric-card"><span>Registered Patients</span><h3 id="admStatPatients">0</h3></div>
+            <div class="metric-card"><span>Consultations</span><h3 id="admStatAppointments">0</h3></div>
+          </div>
+        </div>
+
+        <div id="admTabHospitals" style="display: none;">
+          <div class="card">
+            <div class="card-header">
+              <h2>Affiliated Hospital Units</h2>
+              <button class="btn btn-primary" onclick="openAddHospitalModal()">+ Register Hospital</button>
+            </div>
+            <table>
+              <thead><tr><th>ID</th><th>Hospital Name</th><th>City</th><th>Emergency Contact</th><th>Departments</th></tr></thead>
+              <tbody id="admHospitalsTable"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="admTabDoctors" style="display: none;">
+          <div class="card">
+            <div class="card-header"><h2>Specialist Directory</h2></div>
+            <table>
+              <thead><tr><th>ID</th><th>Physician</th><th>Specialization</th></tr></thead>
+              <tbody id="admDoctorsTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Clinical Consultation Room & Prescription Generator -->
+  <div class="modal-overlay" id="consultationModal">
+    <div class="modal">
+      <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 6px;">Clinical Consultation Room</h3>
+      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;" id="consultationPatientInfo"></p>
+      <form id="consultationForm">
+        <input type="hidden" id="consultApptId" />
+        <input type="hidden" id="consultPatientId" />
+        <div class="form-group">
+          <label>Diagnosis</label>
+          <input type="text" id="consultDiagnosis" required placeholder="e.g. Acute Allergic Contact Dermatitis" />
+        </div>
+        <div class="form-group">
+          <label>Clinical Notes</label>
+          <textarea id="consultNotes" rows="2" placeholder="Patient symptoms observations..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Prescribe Medicines</label>
+          <div id="prescriptionMedicineInputs">
+            <input type="text" placeholder="e.g. Cetirizine 10mg - Once daily for 5 days" required style="margin-bottom: 8px;" />
+          </div>
+          <button type="button" class="btn btn-outline" style="font-size: 11px;" onclick="addMedicineInputLine()">+ Add Another Medicine</button>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px;">
+          <button type="button" class="btn btn-outline" onclick="closeModal('consultationModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Complete Consultation & Issue Rx</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Doctor Review -->
+  <div class="modal-overlay" id="reviewModal">
+    <div class="modal">
+      <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 6px;">Review Consultation</h3>
+      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Only patients with a completed visit can rate this physician.</p>
+      <form id="reviewForm">
+        <input type="hidden" id="revDoctorId" />
+        <div class="form-group">
+          <label>Rating</label>
+          <select id="revRating">
+            <option value="5">⭐⭐⭐⭐⭐ (5 / 5)</option>
+            <option value="4">⭐⭐⭐⭐ (4 / 5)</option>
+            <option value="3">⭐⭐⭐ (3 / 5)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Feedback</label>
+          <textarea id="revComment" rows="3" required placeholder="Describe your experience with the doctor..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Submit Review</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const API = '/api/v1';
+
+    // Global State
+    let activeRole = 'PATIENT';
+    let currentPatient = { id: 1, name: 'John Doe' };
+    let currentDoctor = { id: 3, name: 'Dr. Priya Sharma', specialization: 'Dermatology' };
+
+    let allDoctors = [];
+    let allHospitals = [];
+    let allAppointments = [];
+    let cart = [];
+
+    const pharmacyItems = [
+      { id: 1, name: 'Paracetamol 500mg', price: 45 },
+      { id: 2, name: 'Amoxicillin 250mg', price: 120 },
+      { id: 3, name: 'Cetirizine 10mg', price: 35 },
+      { id: 4, name: 'Hydrocortisone Cream 1%', price: 90 }
+    ];
+
+    async function init() {
+      await fetchDoctors();
+      await fetchHospitals();
+      await fetchAppointments();
+      renderPharmacyCatalog();
+    }
+
+    async function fetchDoctors() {
+      try {
+        const res = await fetch(`${API}/doctors`);
+        allDoctors = await res.json();
+        renderDoctorCards(allDoctors);
+      } catch (e) { console.error(e); }
+    }
+
+    async function fetchHospitals() {
+      try {
+        const res = await fetch(`${API}/hospitals`);
+        allHospitals = await res.json();
+      } catch (e) { console.error(e); }
+    }
+
+    async function fetchAppointments() {
+      try {
+        const res = await fetch(`${API}/appointments`);
+        const data = await res.json();
+        allAppointments = data.content || data;
+      } catch (e) { console.error(e); }
+    }
+
+    /* Condition & Symptom Matcher */
+    function searchBySymptom() {
+      const query = document.getElementById('symptomInput').value.toLowerCase();
+      document.getElementById('symptomDisclaimer').style.display = 'block';
+
+      let targetSpec = '';
+      if (query.includes('skin') || query.includes('rash') || query.includes('itch')) targetSpec = 'Dermatology';
+      else if (query.includes('heart') || query.includes('chest') || query.includes('pressure')) targetSpec = 'Cardiology';
+      else if (query.includes('head') || query.includes('nerve') || query.includes('migraine')) targetSpec = 'Neurology';
+      else if (query.includes('bone') || query.includes('joint') || query.includes('back')) targetSpec = 'Orthopedics';
+      else targetSpec = 'General Medicine';
+
+      const filtered = allDoctors.filter(d => d.specialization.toLowerCase() === targetSpec.toLowerCase());
+      document.getElementById('doctorListHeading').innerText = `Suggested Specialists for "${query}" (${targetSpec})`;
+      renderDoctorCards(filtered);
+    }
+
+    function renderDoctorCards(list) {
+      const container = document.getElementById('doctorCardsGrid');
+      container.innerHTML = '';
+      list.forEach(doc => {
+        container.innerHTML += `
+          <div class="card" style="margin: 0;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+              <span class="pill pill-confirmed">${doc.specialization}</span>
+              <span style="font-size: 13px; font-weight: 700; color: #0284c7;">₹500</span>
+            </div>
+            <h3 style="font-size: 17px; font-weight: 700; color: #1e293b;">${doc.name}</h3>
+            <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Apollo Central Medical Center</p>
+            <button class="btn btn-primary" style="width: 100%; margin-top: 16px;" onclick="startBookingFlow(${doc.id})">Book Appointment</button>
+          </div>
+        `;
+      });
+    }
+
+    /* Screen Transitions */
+    function showLandingView() {
+      document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
+      document.getElementById('landingView').classList.add('active');
+    }
+
+    function showAuthSelection() {
+      document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
+      document.getElementById('authView').classList.add('active');
+    }
+
+    function selectRole(role, card) {
+      activeRole = role;
+      document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      document.getElementById('loginTitle').innerText = `${role} Portal Login`;
+      if (role === 'DOCTOR') document.getElementById('loginEmail').value = 'priya.sharma@hospital.com';
+      else if (role === 'PATIENT') document.getElementById('loginEmail').value = 'john.doe@hospital.com';
+      else document.getElementById('loginEmail').value = 'admin@hospital.com';
+    }
+
+    document.getElementById('portalLoginForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
+      if (activeRole === 'PATIENT') {
+        document.getElementById('patientPortalView').classList.add('active');
+        renderPatientPortal();
+      } else if (activeRole === 'DOCTOR') {
+        document.getElementById('doctorPortalView').classList.add('active');
+        renderDoctorPortal();
+      } else {
+        document.getElementById('adminPortalView').classList.add('active');
+        renderAdminPortal();
+      }
+
+      document.getElementById('topNavActions').innerHTML = `
+        <span style="font-size: 13px; font-weight: 700; color: var(--primary);">Active Session: ${activeRole}</span>
+        <button class="btn btn-danger" onclick="logout()">Logout</button>
+      `;
+    });
+
+    function logout() {
+      showLandingView();
+      document.getElementById('topNavActions').innerHTML = `<button class="btn btn-primary" onclick="showAuthSelection()">Login to HMS</button>`;
+    }
+
+    /* Patient Portal Workflows */
+    function renderPatientPortal() {
+      const myApps = allAppointments.filter(a => a.patientId === currentPatient.id || a.patientName === currentPatient.name);
+      document.getElementById('ptStatTotal').innerText = myApps.length;
+      document.getElementById('ptStatActive').innerText = myApps.filter(a => a.status === 'SCHEDULED').length;
+
+      const tbody = document.getElementById('patientAppointmentsBody');
+      tbody.innerHTML = '';
+      if (myApps.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No appointments found.</td></tr>';
+      } else {
+        myApps.forEach(a => {
+          let actionBtn = '';
+          if (a.status === 'COMPLETED') {
+            actionBtn = `<button class="btn btn-outline" style="font-size: 11px; padding: 4px 8px;" onclick="openReviewModal(${a.doctor?.id || a.doctorId})">⭐ Review</button>`;
+          }
+          tbody.innerHTML += `
+            <tr>
+              <td>#${a.id}</td>
+              <td><strong>${a.doctor?.name || a.doctorName || 'Doctor'}</strong></td>
+              <td>${new Date(a.appointmentDate).toLocaleString()}</td>
+              <td>${a.reason}</td>
+              <td><span class="pill pill-${a.status.toLowerCase()}">${a.status}</span></td>
+              <td>${actionBtn}</td>
+            </tr>
+          `;
+        });
+      }
+    }
+
+    function switchPatientTab(tab, el) {
+      document.querySelectorAll('#patientPortalView .portal-nav-item').forEach(i => i.classList.remove('active'));
+      if (el) el.classList.add('active');
+
+      document.getElementById('ptTabOverview').style.display = tab === 'overview' ? 'block' : 'none';
+      document.getElementById('ptTabBooking').style.display = tab === 'booking' ? 'block' : 'none';
+      document.getElementById('ptTabPrescriptions').style.display = tab === 'prescriptions' ? 'block' : 'none';
+      document.getElementById('ptTabSoap').style.display = tab === 'soap' ? 'block' : 'none';
+      document.getElementById('ptTabPharmacy').style.display = tab === 'pharmacy' ? 'block' : 'none';
+
+      if (tab === 'booking') populateBookingDoctors();
+      if (tab === 'prescriptions') loadPatientPrescriptions();
+    }
+
+    function populateBookingDoctors() {
+      const docSelect = document.getElementById('bookDoctorSelect');
+      docSelect.innerHTML = allDoctors.map(d => `<option value="${d.id}">${d.name} (${d.specialization})</option>`).join('');
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      document.getElementById('bookDate').value = tomorrow.toISOString().split('T')[0];
+      generateDoctorSlots();
+    }
+
+    function generateDoctorSlots() {
+      const docId = document.getElementById('bookDoctorSelect').value;
+      const date = document.getElementById('bookDate').value;
+      const grid = document.getElementById('slotPickerGrid');
+      grid.innerHTML = '';
+
+      const slots = ['09:00', '09:30', '10:00', '10:30', '14:00', '14:30', '15:00'];
+      slots.forEach(slot => {
+        const fullDateTime = `${date}T${slot}:00`;
+        const isBooked = allAppointments.some(a => (a.doctorId == docId || a.doctor?.id == docId) && a.appointmentDate.startsWith(`${date}T${slot}`) && a.status !== 'CANCELLED');
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `slot-btn ${isBooked ? 'booked' : ''}`;
+        btn.innerText = slot;
+        if (!isBooked) {
+          btn.onclick = () => {
+            document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            document.getElementById('selectedTimeSlot').value = fullDateTime;
+          };
+        }
+        grid.appendChild(btn);
+      });
+    }
+
+    document.getElementById('appointmentBookingForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const slotTime = document.getElementById('selectedTimeSlot').value;
+      if (!slotTime) { alert('Please select an available time slot.'); return; }
+
+      const payload = {
+        patientId: currentPatient.id,
+        doctorId: Number(document.getElementById('bookDoctorSelect').value),
+        appointmentDate: slotTime,
+        reason: document.getElementById('bookReason').value
+      };
+
+      const res = await fetch(`${API}/appointments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        alert('Appointment successfully booked!');
+        await fetchAppointments();
+        switchPatientTab('overview');
+        renderPatientPortal();
+      } else {
+        alert(data.error || 'Double booking error: slot is unavailable.');
+      }
+    });
+
+    /* Doctor Consultation Workflow */
+    function renderDoctorPortal() {
+      const qTable = document.getElementById('doctorQueueTable');
+      qTable.innerHTML = '';
+      const docApps = allAppointments.filter(a => a.doctorId === currentDoctor.id || a.doctor?.id === currentDoctor.id);
+
+      if (docApps.length === 0) {
+        qTable.innerHTML = '<tr><td colspan="6" style="text-align: center;">No scheduled consultations.</td></tr>';
+      } else {
+        docApps.forEach(a => {
+          let btn = '';
+          if (a.status === 'SCHEDULED') {
+            btn = `<button class="btn btn-primary" style="font-size: 11px;" onclick="openConsultationRoom(${a.id}, ${a.patientId || a.patient?.id}, '${a.patientName || a.patient?.name || 'Patient'}')">Start Consult</button>`;
+          }
+          qTable.innerHTML += `
+            <tr>
+              <td>#${a.id}</td>
+              <td><strong>${a.patientName || a.patient?.name || 'Patient'}</strong></td>
+              <td>${new Date(a.appointmentDate).toLocaleString()}</td>
+              <td>${a.reason}</td>
+              <td><span class="pill pill-${a.status.toLowerCase()}">${a.status}</span></td>
+              <td>${btn}</td>
+            </tr>
+          `;
+        });
+      }
+    }
+
+    function openConsultationRoom(apptId, patientId, patientName) {
+      document.getElementById('consultApptId').value = apptId;
+      document.getElementById('consultPatientId').value = patientId;
+      document.getElementById('consultationPatientInfo').innerText = `Patient: ${patientName} (Appointment #${apptId})`;
+      document.getElementById('consultationModal').classList.add('open');
+    }
+
+    function addMedicineInputLine() {
+      const container = document.getElementById('prescriptionMedicineInputs');
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.required = true;
+      input.placeholder = 'e.g. Paracetamol 500mg - Twice daily after meals';
+      input.style.marginBottom = '8px';
+      container.appendChild(input);
+    }
+
+    document.getElementById('consultationForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const medInputs = document.querySelectorAll('#prescriptionMedicineInputs input');
+      const medicines = Array.from(medInputs).map(i => i.value);
+
+      const payload = {
+        appointmentId: Number(document.getElementById('consultApptId').value),
+        patientId: Number(document.getElementById('consultPatientId').value),
+        doctorId: currentDoctor.id,
+        doctorName: currentDoctor.name,
+        diagnosis: document.getElementById('consultDiagnosis').value,
+        clinicalNotes: document.getElementById('consultNotes').value,
+        medicines: medicines
+      };
+
+      const res = await fetch(`${API}/prescriptions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        alert('Consultation finalized and prescription generated!');
+        closeModal('consultationModal');
+        await fetchAppointments();
+        renderDoctorPortal();
+      }
+    });
+
+    /* Patient Prescriptions & SOAP */
+    async function loadPatientPrescriptions() {
+      const res = await fetch(`${API}/patients/${currentPatient.id}/prescriptions`);
+      const rxs = await res.json();
+      const list = document.getElementById('patientPrescriptionsList');
+      list.innerHTML = '';
+      if (rxs.length === 0) {
+        list.innerHTML = '<p style="color: var(--text-muted); font-size: 13px;">No digital prescriptions issued yet.</p>';
+      } else {
+        rxs.forEach(rx => {
+          list.innerHTML += `
+            <div style="border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 12px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <strong>${rx.doctorName}</strong>
+                <span style="font-size: 12px; color: var(--text-muted);">${new Date(rx.issuedAt).toLocaleDateString()}</span>
+              </div>
+              <p style="font-size: 13px; font-weight: 700; color: #0369a1; margin-bottom: 6px;">Diagnosis: ${rx.diagnosis}</p>
+              <ul style="font-size: 13px; margin-left: 20px;">
+                ${rx.medicines.map(m => `<li>${m}</li>`).join('')}
+              </ul>
+            </div>
+          `;
+        });
+      }
+    }
+
+    async function loadCurrentPatientSoapReport() {
+      const xmlBody = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:pat="http://hospital.com/hms/soap/patient"><soapenv:Header/><soapenv:Body><pat:getPatientReportRequest><pat:patientId>${currentPatient.id}</pat:patientId></pat:getPatientReportRequest></soapenv:Body></soapenv:Envelope>`;
+      try {
+        const res = await fetch('/ws', { method: 'POST', headers: { 'Content-Type': 'text/xml' }, body: xmlBody });
+        document.getElementById('ptSoapXmlBox').innerText = await res.text();
+      } catch (e) {
+        document.getElementById('ptSoapXmlBox').innerText = 'Error calling SOAP endpoint: ' + e.message;
+      }
+    }
+
+    /* Pharmacy Store */
+    function renderPharmacyCatalog() {
+      const grid = document.getElementById('pharmacyCatalogGrid');
+      grid.innerHTML = pharmacyItems.map(p => `
+        <div style="background: #ffffff; border: 1px solid var(--border); padding: 12px; border-radius: 8px;">
+          <h4 style="font-size: 14px; font-weight: 700;">${p.name}</h4>
+          <p style="font-size: 13px; color: #0284c7; font-weight: 700; margin: 4px 0 8px;">₹${p.price}</p>
+          <button class="btn btn-outline" style="font-size: 11px; width: 100%;" onclick="addToCart(${p.id})">Add to Order</button>
+        </div>
+      `).join('');
+    }
+
+    function addToCart(id) {
+      const item = pharmacyItems.find(p => p.id === id);
+      cart.push(item);
+      updateCartDisplay();
+    }
+
+    function updateCartDisplay() {
+      const list = document.getElementById('cartItemsList');
+      const total = cart.reduce((sum, item) => sum + item.price, 0);
+      document.getElementById('cartTotal').innerText = total;
+      if (cart.length === 0) { list.innerText = 'Cart is empty.'; return; }
+      list.innerHTML = cart.map(i => `<div>• ${i.name} (₹${i.price})</div>`).join('');
+    }
+
+    async function placeMedicineOrder() {
+      const address = document.getElementById('orderAddress').value;
+      if (!address || cart.length === 0) { alert('Add medicines and provide delivery address.'); return; }
+      const total = cart.reduce((sum, item) => sum + item.price, 0);
+
+      const payload = {
+        patientId: currentPatient.id,
+        patientName: currentPatient.name,
+        items: cart.map(i => i.name).join(', '),
+        totalAmount: total,
+        deliveryAddress: address
+      };
+
+      const res = await fetch(`${API}/orders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        alert('Medicine Order placed successfully!');
+        cart = [];
+        updateCartDisplay();
+      }
+    }
+
+    /* Doctor Review Flow */
+    function openReviewModal(docId) {
+      document.getElementById('revDoctorId').value = docId;
+      document.getElementById('reviewModal').classList.add('open');
+    }
+
+    document.getElementById('reviewForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        doctorId: Number(document.getElementById('revDoctorId').value),
+        patientId: currentPatient.id,
+        patientName: currentPatient.name,
+        rating: Number(document.getElementById('revRating').value),
+        comment: document.getElementById('revComment').value
+      };
+
+      const res = await fetch(`${API}/reviews`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        alert('Review published successfully!');
+        closeModal('reviewModal');
+      } else {
+        alert(data.error || 'Review rejected by policy.');
+      }
+    });
+
+    /* Admin Portal */
+    function renderAdminPortal() {
+      document.getElementById('admStatHospitals').innerText = allHospitals.length;
+      document.getElementById('admStatDoctors').innerText = allDoctors.length;
+      document.getElementById('admStatAppointments').innerText = allAppointments.length;
+      document.getElementById('admStatPatients').innerText = '2';
+
+      const hBody = document.getElementById('admHospitalsTable');
+      hBody.innerHTML = allHospitals.map(h => `<tr><td>#${h.id}</td><td><strong>${h.name}</strong></td><td>${h.city}</td><td>${h.emergencyContact}</td><td>${(h.departments || []).join(', ')}</td></tr>`).join('');
+
+      const dBody = document.getElementById('admDoctorsTable');
+      dBody.innerHTML = allDoctors.map(d => `<tr><td>#${d.id}</td><td><strong>${d.name}</strong></td><td><span class="pill pill-confirmed">${d.specialization}</span></td></tr>`).join('');
+    }
+
+    function switchAdminTab(tab, el) {
+      document.querySelectorAll('#adminPortalView .portal-nav-item').forEach(i => i.classList.remove('active'));
+      if (el) el.classList.add('active');
+      document.getElementById('admTabMetrics').style.display = tab === 'metrics' ? 'block' : 'none';
+      document.getElementById('admTabHospitals').style.display = tab === 'hospitals' ? 'block' : 'none';
+      document.getElementById('admTabDoctors').style.display = tab === 'doctors' ? 'block' : 'none';
+    }
+
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    init();
+  </script>
+</body>
+</html>

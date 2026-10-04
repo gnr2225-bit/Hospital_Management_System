@@ -1,0 +1,3 @@
+import { useEffect,useState } from 'react'
+const list=d=>Array.isArray(d)?d:(d?.content||[])
+export function useLoad(fn,deps=[]){const [data,setData]=useState([]),[loading,setLoading]=useState(true),[error,setError]=useState('');const reload=()=>{setLoading(true);fn().then(r=>{setData(list(r.data));setError('')}).catch(e=>{setError(e.response?.status===404?'This operation is not available in the current hospital API.':e.response?.data?.message||'Could not load data from the hospital API.');setData([])}).finally(()=>setLoading(false))};useEffect(()=>{reload()},deps);return {data,loading,error,reload,setData}}

@@ -1,0 +1,32 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+targetNamespace="http://hospital.com/hms/soap/patient"
+xmlns:tns="http://hospital.com/hms/soap/patient"
+elementFormDefault="qualified">
+
+    <xs:element name="getPatientReportRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="patientId" type="xs:long"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>  
+    <xs:element name="getPatientReportResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="patientId" type="xs:long"/>
+                <xs:element name="patientName" type="xs:string"/>
+                <xs:element name="appointments" type="tns:appointmentRecord" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:complexType name="appointmentRecord">
+        <xs:sequence>
+            <xs:element name="appointmentId" type="xs:long"/>
+            <xs:element name="doctorName" type="xs:string"/>
+            <xs:element name="specialization" type="xs:string"/>
+            <xs:element name="date" type="xs:string"/>
+            <xs:element name="status" type="xs:string"/>
+            <xs:element name="reason" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>
