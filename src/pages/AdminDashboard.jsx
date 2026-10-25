@@ -1,2 +1,3 @@
 import PortalHome from './PortalHome'
-export default function AdminDashboard(){return <PortalHome role="admin"/>}
+import AdminAnalytics from '../components/dashboard/AdminAnalytics'
+export default function AdminDashboard(){return <><PortalHome role="admin"/><AdminAnalytics/></>}

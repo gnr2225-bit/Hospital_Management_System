@@ -8,6 +8,14 @@ const accounts = [
 ]
 export async function login({ role, identifier, password }) {
  const account = accounts.find(a => a.role === role && a.email.toLowerCase() === identifier.trim().toLowerCase() && a.password === password)
+ if (role === 'doctor' && !account) {
+   try { return (await api.post('/auth/doctor/login', { email:identifier.trim(), password })).data }
+   catch (error) {
+     if (error.response?.status === 401) throw new Error('Invalid email or password for the selected role.')
+     if (!error.response) throw new Error('Cannot connect to the hospital service. Make sure the backend is running on port 8080.')
+     throw new Error(error.response.data?.message || error.response.data?.error || 'Unable to sign in right now. Please try again.')
+   }
+ }
  if (role === 'patient' && !(account && account.email === 'john.doe@hospital.com')) {
    try { return (await api.post('/auth/login', { email:identifier.trim(), password })).data }
    catch (error) {

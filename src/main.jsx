@@ -5,4 +5,5 @@ import { AuthProvider } from './context/AuthContext'
 import ToastProvider from './components/common/ToastContainer'
 import AppRoutes from './routes/AppRoutes'
 import './styles.css'
+import './advanced.css'
 createRoot(document.getElementById('root')).render(<React.StrictMode><BrowserRouter><ToastProvider><AuthProvider><AppRoutes/></AuthProvider></ToastProvider></BrowserRouter></React.StrictMode>)

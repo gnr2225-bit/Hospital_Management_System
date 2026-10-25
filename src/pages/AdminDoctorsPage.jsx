@@ -1,0 +1,38 @@
+import { useMemo, useState } from 'react'
+import { MapPin, Pencil, Plus, Save, Stethoscope, X } from 'lucide-react'
+import { doctorService } from '../services/doctorService'
+import { api } from '../services/api'
+import { useToast } from '../context/ToastContext'
+import { useLoad } from './useLoad'
+import LoadingSpinner from '../components/common/LoadingSpinner'
+
+const emptyForm = { name:'', specialization:'', consultationFee:'', experienceYears:'', qualifications:'', bio:'', hospitalId:'' }
+const clinicAddress = clinic => clinic ? [clinic.address, clinic.city].filter(Boolean).join(', ') : ''
+
+export default function AdminDoctorsPage(){
+  const toast=useToast(),[specialization,setSpecialization]=useState(''),[editing,setEditing]=useState(null),[form,setForm]=useState({...emptyForm,loginEmail:'',initialPassword:''}),[saving,setSaving]=useState(false),[createdCredentials,setCreatedCredentials]=useState(null)
+  const {data:doctors,reload,loading,error}=useLoad(()=>doctorService.list(),[])
+  const {data:clinics,loading:clinicsLoading,error:clinicError}=useLoad(()=>api.get('/hospitals'),[])
+  const specializations=useMemo(()=>[...new Set(doctors.map(d=>d.specialization).filter(Boolean))],[doctors])
+  function startEdit(doctor){setEditing(doctor.id);setForm({...emptyForm,loginEmail:'',initialPassword:'',name:doctor.name||'',specialization:doctor.specialization||'',consultationFee:doctor.consultationFee??'',experienceYears:doctor.experienceYears??'',qualifications:doctor.qualifications||'',bio:doctor.bio||'',hospitalId:doctor.hospital?.id?String(doctor.hospital.id):''})}
+  function reset(){setEditing(null);setForm({...emptyForm,loginEmail:'',initialPassword:''})}
+  async function save(e){e.preventDefault();setSaving(true);try{const payload={name:form.name.trim(),specialization:form.specialization.trim(),consultationFee:form.consultationFee===''?null:Number(form.consultationFee),experienceYears:form.experienceYears===''?null:Number(form.experienceYears),qualifications:form.qualifications.trim(),bio:form.bio.trim(),hospital:form.hospitalId?{id:Number(form.hospitalId)}:null,loginEmail:form.loginEmail.trim(),initialPassword:form.initialPassword};if(editing)await doctorService.update(editing,payload);else{await doctorService.create(payload);setCreatedCredentials({email:form.loginEmail.trim(),password:form.initialPassword})}toast(editing?'Doctor details updated.':'Doctor profile and login created.');reset();reload()}catch(e){const data=e.response?.data,validation=data?.errors?Object.values(data.errors).join(' '):'';const message=data?.error||data?.message||validation||(e.response?.status===405?'The backend is running an older version. Restart Spring Boot and try again.':!e.response?'Cannot reach the hospital backend. Check that it is running on port 8080.':'Could not save doctor details.');toast(message,'error')}finally{setSaving(false)}}
+  return <div className="page-stack"><div className="page-title-row"><div><span className="eyebrow">CLINICIAN DIRECTORY</span><h1>Doctors & specialists</h1><p>Maintain clinician profiles, consultation fees, experience, and clinic locations for patients.</p></div></div>
+    <div className="content-grid admin-content"><section className="panel"><div className="panel-heading"><h2>{editing?'Edit doctor profile':'Register a doctor'}</h2>{editing&&<button className="icon-button" onClick={reset} aria-label="Cancel editing"><X size={18}/></button>}</div>
+      {createdCredentials&&<div className="notice doctor-login-created" role="status"><div><b>Doctor login created</b><span>Email: <strong>{createdCredentials.email}</strong></span><span>Temporary password: <strong>{createdCredentials.password}</strong></span><small>Copy these credentials and share them securely. This password is shown here once.</small></div><button type="button" className="icon-button" aria-label="Dismiss credentials" onClick={()=>setCreatedCredentials(null)}><X size={16}/></button></div>}
+      <form className="form-stack" onSubmit={save}>
+        <label>Doctor name<input required value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="Dr. Full name"/></label>
+        <label>Specialization<input required value={form.specialization} onChange={e=>setForm({...form,specialization:e.target.value})} placeholder="e.g. Cardiology"/></label>
+        <label>Doctor login email<input type="email" required={!editing} value={form.loginEmail} onChange={e=>setForm({...form,loginEmail:e.target.value})} placeholder={editing?'Enter only to change the login email':'doctor@hospital.com'}/></label>
+        <label>{editing?'Reset doctor password (optional)':'Temporary password'}<input type="password" minLength="8" maxLength="128" required={!editing} autoComplete="new-password" value={form.initialPassword} onChange={e=>setForm({...form,initialPassword:e.target.value})} placeholder={editing?'Leave blank to keep current password':'At least 8 characters'}/></label>
+        <div className="form-row"><label>Consultation fee (₹)<input type="number" min="0" step="1" value={form.consultationFee} onChange={e=>setForm({...form,consultationFee:e.target.value})} placeholder="e.g. 800"/></label><label>Experience (years)<input type="number" min="0" max="70" value={form.experienceYears} onChange={e=>setForm({...form,experienceYears:e.target.value})} placeholder="e.g. 12"/></label></div>
+        <label>Qualifications<input value={form.qualifications} onChange={e=>setForm({...form,qualifications:e.target.value})} placeholder="e.g. MBBS, MD"/></label>
+        <label>Assign clinic<select required value={form.hospitalId} onChange={e=>setForm({...form,hospitalId:e.target.value})}><option value="">Choose a clinic</option>{clinics.map(c=><option value={c.id} key={c.id}>{c.name}{clinicAddress(c)?` — ${clinicAddress(c)}`:''}</option>)}</select></label>
+        {clinicError&&<div className="notice error-notice">Clinic list unavailable. Add a clinic under Hospital clinics first.</div>}
+        <label>Patient-facing profile<textarea rows="3" value={form.bio} onChange={e=>setForm({...form,bio:e.target.value})} placeholder="Short introduction shown to patients"/></label>
+        <button className="button primary" disabled={saving||clinicsLoading}>{saving?<LoadingSpinner label="Saving"/>:editing?<><Save size={16}/> Save changes</>:<><Plus size={17}/> Add doctor</>}</button>
+      </form>
+    </section>
+    <section className="panel"><div className="panel-heading"><h2>Available doctors</h2><select value={specialization} onChange={e=>setSpecialization(e.target.value)}><option value="">All departments</option>{specializations.map(s=><option key={s}>{s}</option>)}</select></div>{error&&<div className="notice error-notice">{error}</div>}{loading?<LoadingSpinner/>:doctors.filter(d=>!specialization||d.specialization===specialization).map(d=><article className="directory-row" key={d.id}><span className="doctor-avatar small"><Stethoscope/></span><span className="doctor-directory-details"><b>{d.name}</b><small>{d.specialization} · {d.experienceYears!=null?`${d.experienceYears} years experience`:'Experience not added'} · {d.consultationFee!=null?`₹${Number(d.consultationFee).toLocaleString('en-IN')}`:'Fee not set'}</small><small>{d.hospital?.name||'No clinic assigned'}{clinicAddress(d.hospital)?` · ${clinicAddress(d.hospital)}`:''}</small></span><button className="button secondary small-button" onClick={()=>startEdit(d)}><Pencil size={14}/> Edit</button></article>)}{!loading&&!doctors.filter(d=>!specialization||d.specialization===specialization).length&&<p className="muted">No doctors match this department.</p>}</section></div>
+  </div>
+}

@@ -31,6 +31,15 @@ public class HmsApplication {
                 doctorRepository.save(new Doctor("Dr. Ananya Reddy", "Orthopedics"));
             }
 
+            boolean ananyaExists = doctorRepository.findAll().stream()
+                    .map(Doctor::getName)
+                    .filter(name -> name != null)
+                    .map(name -> name.replaceFirst("(?i)^dr\\.?\\s*", "").trim())
+                    .anyMatch(name -> name.equalsIgnoreCase("Ananya Reddy"));
+            if (!ananyaExists) {
+                doctorRepository.save(new Doctor("Dr. Ananya Reddy", "Orthopedics"));
+            }
+
             if (patientRepository.count() == 0) {
                 patientRepository.save(new Patient("John Doe", "john.doe@hospital.com", "9876543210"));
                 patientRepository.save(new Patient("Sarah Connor", "sarah@cyber.com", "9123456789"));

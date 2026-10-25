@@ -15,6 +15,7 @@ public class MedicineOrder {
     private String items;
     private Double totalAmount;
     private String deliveryAddress;
+    private String paymentMethod = "CASH_ON_DELIVERY";
     private String status = "PLACED";
     private LocalDateTime orderDate = LocalDateTime.now();
 
@@ -33,6 +34,8 @@ public class MedicineOrder {
     public String getItems() { return items; }
     public Double getTotalAmount() { return totalAmount; }
     public String getDeliveryAddress() { return deliveryAddress; }
+    public String getPaymentMethod() { return paymentMethod; }
+    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
     public LocalDateTime getOrderDate() { return orderDate; }

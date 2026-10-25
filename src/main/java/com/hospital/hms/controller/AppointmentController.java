@@ -1,6 +1,7 @@
 package com.hospital.hms.controller;
 
 import com.hospital.hms.dto.AppointmentRequestDTO;
+import com.hospital.hms.dto.AppointmentRescheduleRequest;
 import com.hospital.hms.entity.Appointment;
 import com.hospital.hms.entity.AppointmentStatus;
 import com.hospital.hms.service.AppointmentService;
@@ -10,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
+import java.time.LocalDate;
+import jakarta.validation.constraints.NotNull;
 
 @RestController
 @RequestMapping("/api/v1/appointments")
@@ -27,9 +30,24 @@ public class AppointmentController {
         return ResponseEntity.ok(appointmentService.getAppointments());
     }
 
+    @GetMapping("/availability")
+    public ResponseEntity<List<Map<String, Object>>> getAvailability(
+            @RequestParam Long doctorId,
+            @RequestParam(required = false) Long patientId,
+            @RequestParam @NotNull LocalDate date) {
+        return ResponseEntity.ok(appointmentService.getAvailability(doctorId, patientId, date));
+    }
+
     @PostMapping
     public ResponseEntity<Appointment> bookAppointment(@Valid @RequestBody AppointmentRequestDTO dto) {
         return new ResponseEntity<>(appointmentService.bookAppointment(dto), HttpStatus.CREATED);
+    }
+
+    @PutMapping("/{id}/reschedule")
+    public ResponseEntity<Appointment> reschedule(
+            @PathVariable Long id,
+            @Valid @RequestBody AppointmentRescheduleRequest request) {
+        return ResponseEntity.ok(appointmentService.reschedule(id, request.getNewAppointmentDate()));
     }
 
     @PutMapping("/{id}/status")
